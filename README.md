@@ -8,7 +8,6 @@
 
 * **Powerful and extensible.** Customize, extend, and integrate Flarum to suit your community. Flarum’s architecture is amazingly flexible, with a powerful Extension API.
 
-![screenshot](https://flarum.org/assets/img/home-screenshot.png)
 
 ## Installation
 
