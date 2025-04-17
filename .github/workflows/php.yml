@@ -1,0 +1,49 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Cloner le dépôt
+      uses: actions/checkout@v3
+
+    - name: Installer PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, dom, curl
+        tools: composer
+
+    - name: Installer les dépendances PHP
+      run: composer install --no-interaction --prefer-dist
+
+    - name: Linter PHP avec PHP_CodeSniffer
+      run: ./vendor/bin/phpcs --standard=PSR12 src/
+
+    - name: Analyse statique avec PHPStan
+      run: ./vendor/bin/phpstan analyse src/
+
+    - name: Tests unitaires avec PHPUnit
+      run: ./vendor/bin/phpunit
+
+    - name: Audit sécurité des dépendances
+      run: composer audit
+
+    - name: Déploiement vers serveur de production
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ubuntu
+        key: ${{ secrets.PROD_SSH_KEY }}
+        script: |
+          cd /var/www/flarum
+          git pull origin main
+          composer install --no-dev --optimize-autoloader
+          php flarum cache:clear
+          sudo chown -R www-data:www-data /var/www/flarum
